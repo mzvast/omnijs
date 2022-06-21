@@ -1,0 +1,144 @@
+/*{
+    "author": "mzvast",
+    "targets": ["omnioutliner"],
+    "type": "action",
+    "identifier": "com.mycompany.createPlanFromMonth",
+    "version": "0.1",
+    "description": "A plug-in that...",
+    "label": "createPlanFromMonth",
+    "mediumLabel": "createPlanFromMonth",
+    "longLabel": "createPlanFromMonth",
+    "paletteLabel": "createPlanFromMonth",
+}*/
+(() => {
+    var action = new PlugIn.Action(function (selection) {
+        // Add code to run when the action is invoked
+        // console.log("Invoked with selection", selection.valueForColumn());
+        var selectedItems = document.editors[0].selectedNodes.map(function (
+            node
+        ) {
+            return node.object;
+        });
+
+        selectedItems.forEach((item) => {
+            processItem(item);
+        });
+
+        // if (selectedItems.length != 1) {
+        //     // var errTitle = 'SELECTION ERROR';
+        //     // var errMesssage = 'Please select a single item.';
+        //     // var alert = new Alert(errTitle, errMesssage);
+        //     // alert.show(function (result) {
+        //     //     throw new Error(errMesssage);
+        //     // });
+        //     selectedItems.forEach((item) => {
+        //         processItem(item);
+        //     });
+        // } else {
+        //     processItem(selectedItems[0]);
+        // }
+    });
+    // 处理一条记录
+    function processItem(selectedItem) {
+        // process item
+        // var selectedItem = selectedItems[0];
+        var targetColumn = document.outline.outlineColumn;
+        var itemValue = selectedItem.valueForColumn(targetColumn).string;
+        console.log('Invoked with selection', itemValue);
+        // 2022-1,2022-01
+        if (!/\d{4}-\d{2}/i.test(itemValue)) {
+            new Alert('bad date, expect YYYY-MM', itemValue).show(function (result) {});
+            return;
+        }
+        // new Alert('Item Text', itemValue).show(function (result) {});
+        // add following sibling
+        // add child for parent node
+        // var selectedItemParent = selectedItem.parent;
+        // selectedItemParent.addChild(selectedItemParent.end, function (item) {
+        //     item.topic = 'NEW FOLLOWING SIBLING ITEM';
+        // });
+        // 输入
+        // 2022-06
+        // getDay 0周日 1周一..6周六
+
+        // 输出
+        // W1
+        // 6.1
+        // 6.2
+        // 6.3
+        // W2
+        // ...
+        // 6.30
+        const ans = generateCalender(itemValue);
+
+        // 最终的数据结构
+        // ans = [
+        //     ['6.1', '6.2', '6.3'],
+        //     ['6.5', '6.6', '6.7', '6.8', '6.9'],
+        // ];
+
+        // renderer
+        for (let i = 0; i < ans.length; i++) {
+            // i=> week
+            const week = selectedItem.addChild(
+                selectedItem.end,
+                function (item) {
+                    item.topic =
+                        //eg. 6.27-7.1
+                        // 'W' +
+                        // (i + 1) +
+                        `${ans[i][0]}-${ans[i][ans[i].length - 1]}`;
+                }
+            );
+            for (let j = 0; j < ans[i].length; j++) {
+                const day = week.addChild(week.end, function (item) {
+                    item.topic = ans[i][j];
+                });
+
+                day.addChild(day.end, function (item) {
+                    item.topic = 'TOP3';
+                });
+                day.addChild(day.end, function (item) {
+                    item.topic = '🧙‍♀️🐟';
+                });
+            }
+        }
+        // selectedItem.addChild(selectedItem.end, function (item) {
+        //     item.topic = 'NEW FOLLOWING SIBLING ITEM';
+        // });
+    }
+
+    function generateCalender(itemValue) {
+        const startPoint = new Date(itemValue);
+        const y = startPoint.getFullYear();
+        const m = startPoint.getMonth() + 1; // 月
+        const d = startPoint.getDate(); // 日
+
+        const ans = [];
+        let tmp = [];
+        while (
+            startPoint.getMonth() + 1 <= m &&
+            startPoint.getFullYear() === y
+        ) {
+            const day = startPoint.getDay();
+            if (day < 6 && day > 0) {
+                tmp.push(`${m}.${startPoint.getDate()}`);
+            } else if (tmp.length) {
+                ans.push(tmp);
+                tmp = [];
+            }
+            startPoint.setDate(startPoint.getDate() + 1);
+        }
+
+        return ans;
+    }
+
+    // If needed, uncomment, and add a function that returns true if the current selection is appropriate for the action.
+    /*
+    action.validate = function(selection){
+
+    };
+    */
+
+    return action;
+})();
