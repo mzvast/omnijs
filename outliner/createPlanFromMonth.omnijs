@@ -47,7 +47,9 @@
         console.log('Invoked with selection', itemValue);
         // 2022-1,2022-01
         if (!/\d{4}-\d{2}/i.test(itemValue)) {
-            new Alert('bad date, expect YYYY-MM', itemValue).show(function (result) {});
+            new Alert('bad date, expect YYYY-MM', itemValue).show(function (
+                result
+            ) {});
             return;
         }
         // new Alert('Item Text', itemValue).show(function (result) {});
@@ -128,6 +130,11 @@
                 tmp = [];
             }
             startPoint.setDate(startPoint.getDate() + 1);
+        }
+
+        // 如果最后一周有值，则将其添加到结果中
+        if (tmp.length) {
+            ans.push(tmp);
         }
 
         return ans;
